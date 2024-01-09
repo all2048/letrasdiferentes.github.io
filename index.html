@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title>Hour Calculator</title>
+  
+  <style>* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  width: 80%;
+  max-width: 600px;
+  margin: 20px auto;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+}
+
+form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+}
+
+label {
+  display: block;
+  width: 40%;
+  margin: 10px 0;
+}
+
+select, input, button {
+  display: block;
+  width: 40%;
+  height: 40px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+button {
+  background-color: #333;
+  color: white;
+  cursor: pointer;
+}
+
+#output {
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 18px;
+  color: #333;
+}</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Hour Calculator</h1>
+    <form id="calculator">
+      <label for="time-period">Time period:</label>
+      <select id="time-period" name="time-period">
+        <option value="day">Day</option>
+        <option value="week">Week</option>
+        <option value="month">Month</option>
+        <option value="year">Year</option>
+      </select>
+      <label for="start-date">Start date (optional):</label>
+      <input type="date" id="start-date" name="start-date">
+      <button type="submit" id="calculate">Calculate</button>
+    </form>
+    <div id="output"></div>
+  </div>
+  <script>
+    // Get the elements from the document
+const timePeriod = document.getElementById("time-period");
+const startDate = document.getElementById("start-date");
+const calculate = document.getElementById("calculate");
+const output = document.getElementById("output");
+
+// Define the number of hours in each time period
+const hoursInDay = 24;
+const hoursInWeek = 168;
+const hoursInMonth = 720;
+const hoursInYear = 8760;
+
+// Define a function to check if a year is a leap year
+const isLeapYear = (year) => {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+};
+
+// Define a function to format the date in YYYY-MM-DD format
+const formatDate = (date) => {
+  let year = date.getFullYear();
+  let month = date.getMonth() + 1;
+  let day = date.getDate();
+  if (month < 10) {
+    month = "0" + month;
+  }
+  if (day < 10) {
+    day = "0" + day;
+  }
+  return `${year}-${month}-${day}`;
+};
+
+// Define a function to calculate the number of hours in a given time period
+const calculateHours = (timePeriod, startDate) => {
+  // Initialize the result variable
+  let result = 0;
+  // Get the current date
+  let currentDate = new Date();
+  // Get the value of the time period
+  let timePeriodValue = timePeriod.value;
+  // Get the value of the start date
+  let startDateValue = startDate.value;
+  // Check if the start date is valid
+  if (startDateValue) {
+    // Parse the start date as a Date object
+    let parsedStartDate = new Date(startDateValue);
+    // Check if the start date is in the future
+    if (parsedStartDate > currentDate) {
+      // Return an error message
+      return "Invalid start date: it cannot be in the future.";
+    }
+    // Check if the start date is in the same time period as the current date
+    if (timePeriodValue === "day" && parsedStartDate.getDate() !== currentDate.getDate()) {
+      // Return an error message
+      return "Invalid start date: it must be in the same day as the current date.";
+    }
+    if (timePeriodValue === "week" && parsedStartDate.getDay() !== currentDate.getDay()) {
+      // Return an error message
+      return "Invalid start date: it must be in the same week as the current date.";
+    }
+    if (timePeriodValue === "month" && parsedStartDate.getMonth() !== currentDate.getMonth()) {
+      // Return an error message
+      return "Invalid start date: it must be in the same month as the current date.";
+    }
+    if (timePeriodValue === "year" && parsedStartDate.getFullYear() !== currentDate.getFullYear()) {
+      // Return an error message
+      return "Invalid start date: it must be in the same year as the current date.";
+    }
+    // Calculate the difference in milliseconds between the current date and the start date
+    let difference = currentDate - parsedStartDate;
+    // Convert the difference to hours
+    result = difference / (1000 * 60 * 60);
+  } else {
+    // Use the default number of hours for each time period
+    switch (timePeriodValue) {
+      case "day":
+        result = hoursInDay;
+        break;
+      case "week":
+        result = hoursInWeek;
+        break;
+      case "month":
+        // Get the current month and year
+        let month = currentDate.getMonth();
+        let year = currentDate.getFullYear();
+        // Get the number of days in the current month
+        let daysInMonth = new Date(year, month + 1, 0).getDate();
+        // Multiply the number of days by the number of hours in a day
+        result = daysInMonth * hoursInDay;
+        break;
+      case "year":
+        result = hoursInYear;
+        // Check if the current year is a leap year
+        if (isLeapYear(currentDate.getFullYear())) {
+          // Add 24 hours to the result
+          result += 24;
+        }
+        break;
+      default:
+        // Return an error message
+        return "Invalid time period: it must be one of day, week, month, or year.";
+    }
+  }
+  // Round the result to two decimal places
+  result = result.toFixed(2);
+  // Return the result with the time period and the start date (if provided)
+  if (startDateValue) {
+    return `There are ${result} hours in ${timePeriodValue}, starting from ${startDateValue}.`;
+  } else {
+    return `There are ${result} hours in ${timePeriodValue}.`;
+  }
+};
+
+// Add an event listener to the calculate button
+calculate.addEventListener("click", (event) => {
+  // Prevent the default behavior of the button
+  event.preventDefault();
+  // Call the calculateHours function and display the output
+  output.textContent = calculateHours(timePeriod, startDate);
+});
+  </script>
+</body>
+</html>
